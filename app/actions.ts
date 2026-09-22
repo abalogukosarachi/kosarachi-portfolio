@@ -22,9 +22,7 @@ export async function submitContactForm(
     };
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-
-  if (!apiKey) {
+  if (!process.env.RESEND_API_KEY) {
     return {
       success: false,
       message: "Email service is not configured correctly.",
@@ -32,64 +30,26 @@ export async function submitContactForm(
   }
 
   try {
-    const resend = new Resend(apiKey);
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
-    const { error } = await resend.emails.send({
+    await resend.emails.send({
       from: "Portfolio Contact <onboarding@resend.dev>",
-      to: ["favourabalogu.dev@gmail.com"],
-      replyTo: email,
+      to: "favourabalogu.dev@gmail.com",
       subject: `New portfolio message from ${name}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #18181b;">
-          <h2>New Portfolio Message</h2>
-
-          <p>
-            <strong>Name:</strong> ${escapeHtml(name)}
-          </p>
-
-          <p>
-            <strong>Email:</strong> ${escapeHtml(email)}
-          </p>
-
-          <p>
-            <strong>Message:</strong>
-          </p>
-
-          <p>
-            ${escapeHtml(message).replace(/\n/g, "<br />")}
-          </p>
-        </div>
-      `,
+      replyTo: email,
+      text: message,
     });
-
-    if (error) {
-      console.error("Resend error:", error);
-
-      return {
-        success: false,
-        message: "Message could not be sent. Please try again.",
-      };
-    }
 
     return {
       success: true,
-      message: "Message sent successfully! Thank you for reaching out.",
+      message: "Message sent successfully!",
     };
   } catch (error) {
-    console.error("Contact form error:", error);
+    console.error("Email error:", error);
 
     return {
       success: false,
       message: "Something went wrong. Please try again.",
     };
   }
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
 }
